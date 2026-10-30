@@ -1,6 +1,6 @@
 {
   "name": "yuketang-ws-quiz-notifier",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "private": true,
   "description": "A hardened Tampermonkey quiz notifier for YuKeTang.",
   "scripts": {

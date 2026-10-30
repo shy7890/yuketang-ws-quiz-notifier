@@ -2,6 +2,12 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## 3.7.1 - 2026-10-30
+
+### 安全
+
+- 用户脚本更新改为只从 GitHub Release 发布资产获取，main 分支的提交不再直接推送给已安装用户。
+
 ## 3.7.0 - 2026-08-30
 
 ### 新增

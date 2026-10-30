@@ -1,7 +1,7 @@
 # 雨课堂答题监控提醒
 
 [![CI](https://github.com/shy7890/yuketang-ws-quiz-notifier/actions/workflows/ci.yml/badge.svg)](https://github.com/shy7890/yuketang-ws-quiz-notifier/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-3.7.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.7.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 一个面向 Tampermonkey 的雨课堂课堂题目提醒脚本。它通过 WebSocket 实时事件与可见 DOM 双通道检测新题，并提供声音、桌面通知、标题闪烁、ntfy 手机推送和可选的 DeepSeek 参考答案。
@@ -11,11 +11,11 @@
 ## 安装
 
 1. 安装 [Tampermonkey](https://www.tampermonkey.net/)。
-2. 打开 [安装脚本](https://raw.githubusercontent.com/shy7890/yuketang-ws-quiz-notifier/main/dist/yuketang-quiz-notifier.user.js)。
+2. 打开 [安装脚本](https://github.com/shy7890/yuketang-ws-quiz-notifier/releases/latest/download/yuketang-quiz-notifier.user.js)。
 3. 在 Tampermonkey 页面确认安装，然后进入雨课堂。
 4. 页面右下角出现“雨课堂监控”面板即表示脚本已加载。
 
-脚本包含 `@updateURL` 与 `@downloadURL`，Tampermonkey 可以检查仓库中的后续更新。
+脚本包含 `@updateURL` 与 `@downloadURL`，更新只从 GitHub Release 发布资产获取，main 分支的提交不会直接推送给已安装用户。
 
 ## 功能
 
