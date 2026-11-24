@@ -25,7 +25,7 @@
   } = core;
 
   const pageWindow = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
-  const VERSION = '3.7.0';
+  const VERSION = '3.7.2';
   const CONFIG = Object.freeze({
     domIntervalMs: 3_000,
     domDedupeMs: 90_000,
@@ -39,6 +39,7 @@
     aiKey: 'ykt_notifier_ai_key',
     aiModel: 'ykt_notifier_ai_model',
     ntfyTopic: 'ykt_notifier_ntfy_topic',
+    ntfyToken: 'ykt_notifier_ntfy_token',
     managed: 'ykt_notifier_managed',
     debug: 'ykt_notifier_debug',
   });
@@ -47,11 +48,16 @@
     aiKey: String(GM_getValue(STORAGE.aiKey, GM_getValue('ai_api_key', '')) || ''),
     aiModel: String(GM_getValue(STORAGE.aiModel, GM_getValue('ai_model', 'deepseek-chat')) || 'deepseek-chat'),
     ntfyTopic: String(GM_getValue(STORAGE.ntfyTopic, '') || ''),
+    ntfyToken: String(GM_getValue(STORAGE.ntfyToken, '') || ''),
     managed: Boolean(GM_getValue(STORAGE.managed, false)),
     debug: Boolean(GM_getValue(STORAGE.debug, false)),
   };
   if (!['deepseek-chat', 'deepseek-reasoner'].includes(settings.aiModel)) {
     settings.aiModel = 'deepseek-chat';
+  }
+  if (settings.managed && !settings.ntfyToken) {
+    settings.managed = false;
+    GM_setValue(STORAGE.managed, false);
   }
 
   const state = {
@@ -171,12 +177,26 @@
     try {
       const topic = normalizeNtfyTopic(input);
       saveSetting('ntfyTopic', topic);
-      setAIStatus('ntfy topic 已保存', 'success', 'topic 相当于接收密钥，请勿公开。');
+      setAIStatus('ntfy topic 已保存', 'success', '请确认该 topic 已限制匿名收发。');
       return true;
     } catch (error) {
       setAIStatus(error.message, 'error');
       return false;
     }
+  }
+
+  function configureNtfyToken() {
+    const input = prompt('请输入 ntfy 访问令牌（tk_ 开头）。留空可清除。');
+    if (input === null) return Boolean(settings.ntfyToken);
+    const token = input.trim();
+    if (token && !/^tk_[A-Za-z0-9_-]{8,100}$/.test(token)) {
+      setAIStatus('ntfy 访问令牌格式不正确', 'error');
+      return false;
+    }
+    saveSetting('ntfyToken', token);
+    if (!token) saveSetting('managed', false);
+    setAIStatus(token ? 'ntfy 访问令牌已保存' : 'ntfy 访问令牌已清除', 'muted');
+    return Boolean(token);
   }
 
   function configureAIKey() {
@@ -220,6 +240,7 @@
     panel.querySelector('#ykt-retry').addEventListener('click', retryAI);
     panel.querySelector('#ykt-managed').addEventListener('click', () => {
       if (!settings.managed && !settings.ntfyTopic && !configureNtfy()) return;
+      if (!settings.managed && !settings.ntfyToken && !configureNtfyToken()) return;
       saveSetting('managed', !settings.managed);
       setAIStatus(settings.managed ? '手机托管推送已开启' : '手机托管推送已关闭', settings.managed ? 'success' : 'muted');
     });
@@ -306,7 +327,7 @@
   }
 
   function sendPhoneNotification(title, message) {
-    if (!settings.managed) return;
+    if (!settings.managed || !settings.ntfyToken) return;
     let payload;
     try {
       payload = buildNtfyPayload(settings.ntfyTopic, title, message);
@@ -318,7 +339,10 @@
     GM_xmlhttpRequest({
       method: 'POST',
       url: 'https://ntfy.sh',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${settings.ntfyToken}`,
+      },
       data: JSON.stringify(payload),
       timeout: 12_000,
       onload: (response) => {
@@ -360,7 +384,7 @@
     console.info(`[YKT监控] 检测到新题目：${source} · ${detail}`);
     playAlertSound();
     sendBrowserNotification('⚠️ 雨课堂有新题目', `${detail}\n请打开课堂确认。`);
-    sendPhoneNotification('雨课堂有新题目', `${detail}\n请打开课堂确认。`);
+    sendPhoneNotification('雨课堂有新题目', '请打开课堂确认。');
     flashTitle('有新题目');
     updatePanel();
     scheduleAI(problemId);
@@ -433,7 +457,7 @@
           const answer = String(data?.choices?.[0]?.message?.content || '').trim().slice(0, 2_000);
           if (!answer) throw new Error('empty answer');
           setAIStatus(`🤖 AI 参考\n${answer}`, 'success');
-          sendPhoneNotification('AI 参考答案', `${answer}\n\n题目：${quiz.text.slice(0, 160)}`);
+          sendPhoneNotification('AI 参考答案已生成', '请回到课堂查看。');
         } catch (error) {
           state.aiRequestedIds.delete(quiz.id);
           setAIStatus('DeepSeek 返回内容无法解析', 'error', '可以稍后点击“重试 AI”。');
@@ -721,6 +745,7 @@
   function registerMenuCommands() {
     if (typeof GM_registerMenuCommand !== 'function') return;
     GM_registerMenuCommand('设置 ntfy topic', configureNtfy);
+    GM_registerMenuCommand('设置 ntfy 访问令牌', configureNtfyToken);
     GM_registerMenuCommand('设置 DeepSeek API Key', configureAIKey);
     GM_registerMenuCommand('切换调试日志', () => saveSetting('debug', !settings.debug));
   }
