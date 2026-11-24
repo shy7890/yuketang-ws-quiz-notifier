@@ -2,6 +2,11 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## 3.7.2 - 2026-11-24
+
+- ntfy 手机推送需要访问令牌。手机推送省略题目、答案和调试细节。
+- Actions 固定到完整提交 SHA。
+
 ## 3.7.1 - 2026-10-30
 
 ### 安全

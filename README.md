@@ -1,7 +1,7 @@
 # 雨课堂答题监控提醒
 
 [![CI](https://github.com/shy7890/yuketang-ws-quiz-notifier/actions/workflows/ci.yml/badge.svg)](https://github.com/shy7890/yuketang-ws-quiz-notifier/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-3.7.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.7.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 一个面向 Tampermonkey 的雨课堂课堂题目提醒脚本。它通过 WebSocket 实时事件与可见 DOM 双通道检测新题，并提供声音、桌面通知、标题闪烁、ntfy 手机推送和可选的 DeepSeek 参考答案。
@@ -23,7 +23,7 @@
 - **DOM 兜底检测**：只检查可见的题目、弹窗和提交按钮容器，避免全页面关键词扫描。
 - **独立去重**：不同 problem ID 不共享全局冷却，不会因连续推题互相吞掉提醒。
 - **多重提醒**：提示音、Tampermonkey 桌面通知和页面标题闪烁。
-- **手机推送**：用户自行设置私有 ntfy topic；仓库不包含默认 topic。
+- **手机推送**：通过有访问控制的 ntfy topic 发送普通提醒。
 - **AI 参考答案**：等待当前题目对应的 PPT 文本后调用 DeepSeek V3 或 R1。
 - **安全输出**：AI 与网络返回内容使用 `textContent` 渲染，不作为 HTML 执行。
 - **SPA 状态隔离**：切换课堂或演示文稿后清空旧的 PPT、题目、去重和 AI 请求状态。
@@ -46,12 +46,12 @@
 
 ## ntfy 配置
 
-1. 在 [ntfy](https://ntfy.sh/) App 或网页端订阅一个难以猜测的 topic。
+1. 在 [ntfy](https://ntfy.sh/) 设置受保护的 topic，限制匿名读取和写入。手机端使用有读取权限的账号订阅。
 2. 点击面板中的“📡 ntfy”，输入 8–64 位的字母、数字、下划线或连字符。
-3. 点击“📵 托管关”将其切换为“📲 托管开”。
+3. 点击“📵 托管关”，输入有发布权限的 ntfy 访问令牌。也可在脚本菜单中单独设置令牌。
 4. 点击“🧪 测试”验证手机是否收到通知。
 
-topic 相当于接收密钥。不要使用 `test`、姓名或课程名等容易猜到的值，也不要在 Issue 或截图里公开它。
+公开 topic 即使使用令牌发布，其他人仍有可能订阅或发送。请确认 topic 访问控制已配置。手机推送只包含普通提醒，题目和 AI 答案留在课堂页面。
 
 ## AI 功能的边界
 
